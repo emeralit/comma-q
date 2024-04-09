@@ -2,6 +2,10 @@ Comma: a super simple comment server for static websites, in go
 
 This means your website is no longer purely static, but it's a simple, fairly pragmatic solution to dynamically save and load comments (using javascript)
 
+Questo è un fork per adattare il programma alle esigenze del blog [Quickloox](macintelligence.org).
+
+**Attenzione**: l'eseguibile comma presente in questo repo è compilato su Apple Silicon M1.
+
 # API
 
 * GET /foo/bar/whatever/my-post-slug
