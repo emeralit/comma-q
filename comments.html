@@ -1,0 +1,115 @@
+<div id="comments-container">
+  <!-- javascript will add comments here. loaded from backend and/or submitted successfully -->
+</div>
+
+<h3>Commenta</h3>
+<form id="new-comment-form" action="{{.Site.Params.commentServer}}">
+  <input type="hidden" name="post" value="{{ .File.BaseFileName }}">
+  <br /><input type="text" name="name" placeholder="* Nome" required />
+  <!-- Semplifica i campi di input dei commenti
+  <br /><input type="email" name="email" placeholder="* Email (non visibile, usata per Gravatar)"  />
+  <br /><input type="url" name="url" placeholder="Sito web" />
+  <br /><input type="text" name="special" placeholder="* Sei un umano?"  /> 
+  -->
+  <br /><textarea rows="10" name="message" placeholder="* Commento" required></textarea>
+  <button id="new-comment-submit" class="btn-ready" type="submit" value="Send">Invia</button>
+</form>
+
+<script language="javascript">
+
+  var monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+
+
+  function domReady(fn) {
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      setTimeout(fn, 1);
+    } else {
+      document.addEventListener("DOMContentLoaded", fn);
+    }
+  }
+
+  var addComment = function (data) {
+
+    const container = document.getElementById("comments-container");
+
+
+    var txt = "";
+    var d = new Date(data.Ts);
+    var date = d.getDate() + " " + monthNames[d.getMonth()] + " " + d.getFullYear() + " alle " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+
+    var msg = data.Message // Faccio alcune sostituzioni basilari...
+      .replace(/^###### (.*)/gm, '<h6>$1</h6>')
+      .replace(/^##### (.*)/gm, '<h5>$1</h5>')
+      .replace(/^#### (.*)/gm, '<h4>$1</h4>')
+      .replace(/^### (.*)/gm, '<h3>$1</h3>')
+      .replace(/^## (.*)/gm, '<h2>$1</h2>')
+      .replace(/^# (.*)/gm, '<h1>$1</h1>')
+      .replace(/\!\[(.*?)\]\((.*?)\)/g, '<img src="$2">$1</a>')
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/\*(.*?)\*/g, '<i>$1</i>')
+      .replace(/_(.*?)_/g, '<sub>$1</sub>')
+      .replace(/~(.*?)~/g, '<del>$1</del>')
+      .replace(/\^(.*?)\^/g, '<sup>$1</sup>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+    txt += '<article id="comment" class="comment">\n';
+    txt += '\t<img class="commentAvatar" src="https://www.gravatar.com/avatar/' + data.Hash + '?d=mm&s=60">\n';
+    txt += '\t<div class="commentRight">\n';
+    txt += '\t\t<p class="commentAuthor">' + ((data.Link == "") ? data.Author : '<a href="' + data.Link + '" class="commentAuthor">' + data.Author + '</a>') + '</p>\n';
+    txt += '\t\t<time class="entry-date" datetime="' + data.Ts + '">' + date + '</time>\n';
+    txt += '\t\t<div class="commentMessage">' + msg + '</div>\n';
+    txt += '\t</div>\n';
+    txt += '</article>\n';
+
+    container.innerHTML += txt;
+  };
+
+  domReady(async function () {
+    let form = document.getElementById("new-comment-form");
+    let commentsUrl = "{{.Site.Params.commentServer}}/{{ .File.BaseFileName }}";
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sendData();
+    });
+
+    const response = await fetch(commentsUrl);
+    if (response.ok) {
+      comments = await response.json();
+      comments.forEach(addComment);
+    } else {
+      e = "<div><b>Impossibile caricare i commenti</b></br>" + status + " " + err +
+        "<br/>Funzione commenti disabilitata";
+      form.parentNode.insertBefore(document.createElement(e), form);
+      form.display = "none";
+    }
+
+    async function sendData() {
+      document.querySelector('#new-comment-submit').textContent = 'Invio in corso...';
+      const formData = new FormData(form);
+      try {
+        const response = await fetch(commentsUrl, {
+          method: "POST",
+          body: formData,
+        });
+        button = document.querySelector('#new-comment-submit');
+        if (response.ok) {
+          button.textContent = 'Inviato!'; // Qui lasciamo pure la diciture Inviato!...
+          button.className = 'btn-ok';
+          comment = await response.json();
+          addComment(comment);
+          form.reset(); // Clear the form
+          button.textContent = 'Invia'; // Set the button text back to "Send"
+          button.className = 'btn-ready'; // Set the button class back to its default state
+        } else {
+          button.className = 'btn-err';
+          const message = await response.text();
+          button.textContent = 'failed with status ' + response.status + ' ' + message;
+        }
+      } catch (e) {
+        button.textcontent = 'failed with error ' + e;
+        console.error(e);
+      }
+    }
+  });
+</script>

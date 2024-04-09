@@ -4,7 +4,11 @@ This means your website is no longer purely static, but it's a simple, fairly pr
 
 Questo è un fork per adattare il programma alle esigenze del blog [Quickloox](macintelligence.org).
 
+
+
 **Attenzione**: l'eseguibile comma presente in questo repo è compilato su Apple Silicon M1.
+
+Il file comments.html è un partial utilizzato da hugo per la generazione dei commenti.
 
 # API
 
