@@ -1,9 +1,13 @@
 package main
 
 import (
+  "bytes"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+  "github.com/yuin/goldmark"
+  "github.com/yuin/goldmark/parser"
+  "github.com/yuin/goldmark/renderer/html"
 	"net/http"
 	"net/url"
 	"os"
@@ -97,17 +101,36 @@ func CommentFromForm(form url.Values) (Comment, error) {
 	if form.Get("post") == "" {
 		return Comment{}, fmt.Errorf("post is required")
 	}
+
+// Conversione markdown
+    var buf bytes.Buffer
+md := goldmark.New(
+        goldmark.WithParserOptions(
+            parser.WithAutoHeadingID(),
+        ),
+        goldmark.WithRendererOptions(
+            html.WithHardWraps(),
+            html.WithXHTML(),
+        ),
+    )
+messaggio := form.Get("message")
+if err := md.Convert([]byte(messaggio), &buf); err != nil {
+  panic(err)
+    }
+
+    parsedMessage := buf.String()
+
+
 	return Comment{
 		Parent:    form.Get("post"),
 		Ts:        time.Now(),
-		Message:   form.Get("message"),
+		Message:   parsedMessage,
 		Ipaddress: "", // TODO
 		Author:    form.Get("name"),
 		Email:     form.Get("email"),
 		Link:      form.Get("url"),
 		Hash:      fmt.Sprintf("%x", md5.Sum([]byte(form.Get("name")))),
 	}, nil
-
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {

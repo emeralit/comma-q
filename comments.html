@@ -38,20 +38,6 @@
     var date = d.getDate() + " " + monthNames[d.getMonth()] + " " + d.getFullYear() + " alle " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
 
     var msg = data.Message // Faccio alcune sostituzioni basilari...
-      .replace(/^###### (.*)/gm, '<h6>$1</h6>')
-      .replace(/^##### (.*)/gm, '<h5>$1</h5>')
-      .replace(/^#### (.*)/gm, '<h4>$1</h4>')
-      .replace(/^### (.*)/gm, '<h3>$1</h3>')
-      .replace(/^## (.*)/gm, '<h2>$1</h2>')
-      .replace(/^# (.*)/gm, '<h1>$1</h1>')
-      .replace(/\!\[(.*?)\]\((.*?)\)/g, '<img src="$2">$1</a>')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-      .replace(/\*(.*?)\*/g, '<i>$1</i>')
-      .replace(/_(.*?)_/g, '<sub>$1</sub>')
-      .replace(/~(.*?)~/g, '<del>$1</del>')
-      .replace(/\^(.*?)\^/g, '<sup>$1</sup>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
     txt += '<article id="comment" class="comment">\n';
     txt += '\t<img class="commentAvatar" src="https://www.gravatar.com/avatar/' + data.Hash + '?d=mm&s=60">\n';
     txt += '\t<div class="commentRight">\n';
