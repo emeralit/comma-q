@@ -6,16 +6,39 @@
 <form id="new-comment-form" action="{{.Site.Params.commentServer}}">
   <input type="hidden" name="post" value="{{ .File.BaseFileName }}">
   <br /><input type="text" name="name" placeholder="* Nome" required />
-  <!-- Semplifica i campi di input dei commenti
-  <br /><input type="email" name="email" placeholder="* Email (non visibile, usata per Gravatar)"  />
+  <br /><input type="email" name="email" placeholder="* Email (non visibile, usata per Gravatar)" required />
   <br /><input type="url" name="url" placeholder="Sito web" />
-  <br /><input type="text" name="special" placeholder="* Sei un umano?"  /> 
-  -->
+  <br /><input type="text" name="special" placeholder="* Sei un umano?" required />
   <br /><textarea rows="10" name="message" placeholder="* Commento" required></textarea>
   <button id="new-comment-submit" class="btn-ready" type="submit" value="Send">Invia</button>
 </form>
 
+<script src="{{ .Site.BaseURL }}js/purify.min.js"></script>
+
+<script src="{{ .Site.BaseURL }}js/marked.min.js"></script>
+
 <script language="javascript">
+  function codeToHTMLentities(mdWithHtml) {
+      var result = mdWithHtml.replace(/<code>([\s\S]*?)<\/code>/gm, function(a,b){ return "<code>"+toHtmlEntities(b)+"</code>" });
+      
+      result = result.replace(/^```([\s\S]*?)```$/gm, function(a,b){ return "<pre><code>"+toHtmlEntities(b)+"</code></pre>" });
+
+      result = result.replace(/`([^`]+)`/g, function(a,b){ return "<code>"+toHtmlEntities(b)+"</code>" });
+
+      return result;
+  }
+
+  function toHtmlEntities(str) {
+    var map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+     };
+   
+     return str.replace(/[&<>"']/g, function(m) { return map[m]; });
+	}
 
   var monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 
@@ -28,6 +51,11 @@
     }
   }
 
+  marked.use({
+    breaks: true,
+    gfm: true,
+  });
+
   var addComment = function (data) {
 
     const container = document.getElementById("comments-container");
@@ -37,7 +65,8 @@
     var d = new Date(data.Ts);
     var date = d.getDate() + " " + monthNames[d.getMonth()] + " " + d.getFullYear() + " alle " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
 
-    var msg = data.Message // Faccio alcune sostituzioni basilari...
+    var msg = DOMPurify.sanitize(marked.parse(data.Message)); // Converte il markdown e lo sanifica.
+ 
     txt += '<article id="comment" class="comment">\n';
     txt += '\t<img class="commentAvatar" src="https://www.gravatar.com/avatar/' + data.Hash + '?d=mm&s=60">\n';
     txt += '\t<div class="commentRight">\n';
@@ -73,6 +102,13 @@
     async function sendData() {
       document.querySelector('#new-comment-submit').textContent = 'Invio in corso...';
       const formData = new FormData(form);
+      
+      // Recupera il testo del commento, lo sanitizza, lo sostituisce nel form
+      const msg = formData.get('message');
+      const sanitizedMsg = DOMPurify.sanitize(codeToHTMLentities(msg));
+      //console.log({msg, sanitizedMsg});
+      formData.set('message', sanitizedMsg);
+       
       try {
         const response = await fetch(commentsUrl, {
           method: "POST",
