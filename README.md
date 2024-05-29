@@ -5,8 +5,6 @@ This means your website is no longer purely static, but it's a simple, fairly pr
 ******************
 This is a fork to tailor the program to the needs of the Quickloox blog.
 
-Warning: the executable paragraph in this repo is compiled on Apple Silicon M1.
-
 The comments.html file is a partial used by hugo for comment generation.
 *******************
 
